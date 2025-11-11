@@ -1,0 +1,7 @@
+
+Crypto Market Analysis Report
+-----------------------------
+Rows Used: 9966
+Features Used: ['ema20', 'rsi14', 'macd', 'vol', 'lag_1', 'lag_2', 'lag_3', 'lag_5', 'lag_10']
+Model Cumulative Return: 0.95
+Buy & Hold Cumulative Return: 0.93
