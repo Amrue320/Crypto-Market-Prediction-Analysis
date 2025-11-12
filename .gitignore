@@ -1,5 +1,4 @@
-﻿# Python cache and logs
-__pycache__/
+﻿__pycache__/
 *.py[cod]
 *.log
 
@@ -10,8 +9,11 @@ env/
 
 # Data and models (large files)
 data/
-models/
 reports/
+
+# Allow .pkl models to be tracked
+!models/
+!models/*.pkl
 
 # IDE / OS files
 .vscode/
@@ -26,3 +28,4 @@ build/
 
 # Jupyter
 .ipynb_checkpoints/
+

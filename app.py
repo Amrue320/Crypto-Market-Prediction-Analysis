@@ -1,5 +1,5 @@
 # =====================================
-# app.py — FINAL STABLE LIVE VERSION
+# app.py — FINAL STABLE LIVE VERSION (CoinGecko)
 # =====================================
 
 # -------------------------------
@@ -33,7 +33,7 @@ from src.visualization import plot_predictions, plot_cumulative, plot_indicators
 # -------------------------------
 st.title("📊 Real-Time Crypto Market Prediction Dashboard")
 st.write("""
-Predict cryptocurrency prices using **live Binance data** and a trained machine learning model 
+Predict cryptocurrency prices using **live CoinGecko data** and a trained machine learning model 
 enhanced with technical indicators (**EMA**, **RSI**, **MACD**, **Bollinger Bands**, etc.).
 """)
 
@@ -65,20 +65,19 @@ def align_features(df_feat, model):
     return X
 
 # -------------------------------
-# Prepare Features (fixed)
+# Prepare Features
 # -------------------------------
 def prepare_features(df, model):
     """Compute indicators and align features correctly."""
     df_feat = create_features(df.copy())
     df_feat.columns = df_feat.columns.map(str)
 
-    # Drop columns that model wasn’t trained on
+    # Drop columns not used in model
     removed = [c for c in ["Close", "Close_raw", "pred"] if c in df_feat.columns]
     if removed:
         st.info(f"⚙️ Dropped unused columns before prediction: {removed}")
 
     df_feat = df_feat.drop(columns=[c for c in ["Close", "Close_raw", "pred"] if c in df_feat.columns])
-
     df_aligned = df.tail(len(df_feat)).copy()
     X = align_features(df_feat, model)
     return df_aligned, X
@@ -131,20 +130,24 @@ def forecast_future(df, model, X_scaler, y_scaler, days=7):
     return pd.DataFrame(forecasts)
 
 # -------------------------------
-# Fetch Live Data
+# Fetch Live Data (CoinGecko)
 # -------------------------------
-st.subheader("📡 Fetch Live Crypto Data (from Binance)")
+st.subheader("📡 Fetch Live Crypto Data (from CoinGecko)")
+
 symbol = st.text_input("Enter symbol (e.g., BTCUSDT, ETHUSDT):", "BTCUSDT")
-interval = st.selectbox("Interval:", ["1d", "1h", "15m"], index=0)
+interval = st.selectbox("Interval:", ["daily"], index=0)
 lookback = st.selectbox("Lookback:", ["3 months ago UTC", "6 months ago UTC", "1 year ago UTC"], index=2)
 
 if st.button("🔄 Fetch Live Data"):
-    with st.spinner("Fetching live Binance data..."):
+    with st.spinner("Fetching live market data..."):
         try:
             df = fetch_live_data(symbol, interval, lookback)
-            st.session_state.df = df
-            st.success(f"✅ Loaded {len(df)} rows of {symbol} data.")
-            st.dataframe(df.tail())
+            if df.empty:
+                st.error(f"⚠️ No live data found for {symbol}. Try another symbol.")
+            else:
+                st.session_state.df = df
+                st.success(f"✅ Loaded {len(df)} rows of {symbol} data from CoinGecko.")
+                st.dataframe(df.tail())
         except Exception as e:
             st.error(f"❌ Failed to fetch live data: {e}")
 
@@ -156,11 +159,11 @@ df_aligned = None
 if "df" in st.session_state and st.session_state.df is not None:
     df = st.session_state.df.copy()
 
-    # --- Feature Prep ---
+    # --- Feature Preparation ---
     try:
         df_aligned, X = prepare_features(df, model)
         if df_aligned is None or df_aligned.empty:
-            st.warning("⚠️ Not enough data for prediction. Try longer lookback.")
+            st.warning("⚠️ Not enough data for prediction. Try a longer lookback.")
             st.stop()
         st.success(f"✅ Features computed and aligned ({len(df_aligned)} rows).")
     except Exception as e:
@@ -225,6 +228,7 @@ if "df" in st.session_state and st.session_state.df is not None:
                 st.line_chart(combined.set_index("Date")["Predicted_Close"])
 else:
     st.info("📂 Please fetch live data to begin.")
+
 
 
 
